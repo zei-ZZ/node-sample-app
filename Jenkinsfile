@@ -13,7 +13,10 @@ pipeline {
         stage('Run tests')
         {
             steps {
-                sh 'npm run test'
+                nodejs(nodeJSInstallationName: 'npm') {
+                    sh 'npm install'
+                    sh 'npm run test'
+                }
             }
         }
 
@@ -36,8 +39,12 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sh 'kubectl apply -f k8s/deployment.yaml'
-                sh 'kubectl apply -f k8s/service.yaml'
+                withKubeConfig([credentialsId: 'k8s-config',  caCertificate: '',]) {
+                    sh 'kubectl apply -f k8s/deployment.yaml'
+                    sh 'kubectl apply -f k8s/service.yaml'
+                    sh 'kubectl get svc'
+                    sh 'kubectl get deployments'
+                }
             }
         }
     }
